@@ -1,9 +1,10 @@
 use anyhow::{anyhow, Context, Result};
 use clap::Parser;
+use convert_case::{Case, Casing};
 use serde::Deserialize;
 use std::{
     borrow::Cow,
-    fs::File,
+    fs::{self, File},
     io::{BufReader, BufWriter},
     path::{Path, PathBuf},
 };
@@ -13,45 +14,58 @@ use xml::{attribute::Attribute, name::Name};
 #[command(author, version, about, long_about = None)]
 struct Cli {
     /// Path to the icon's svg file
-    path: Box<Path>,
+    path: PathBuf,
 
     /// The icon's target category
     category: String,
 
     /// Path to the bookshelf directory
     #[arg(short, long)]
-    bookshelf_path: Option<Box<Path>>,
+    bookshelf_path: Option<PathBuf>,
 }
 
 fn main() -> Result<()> {
     let Cli {
-        path: icon_path,
+        path: source_path,
         category,
         bookshelf_path,
     } = Cli::parse();
 
-    is_bookshelf_environment(bookshelf_path)?;
+    let bookshelf_path = bookshelf_path.unwrap_or(PathBuf::new());
 
-    // TODO: read svg file
-    let svg_file = File::open(&icon_path)?;
+    is_bookshelf_environment(&bookshelf_path)?;
 
-    // TODO: change fill in the read svg to currentColor
-    let icon_content = fix_icon_content(svg_file)?;
+    let svg_file = File::open(&source_path)?;
 
-    println!("{icon_content:?}");
+    let icon_content =
+        fix_icon_content(svg_file).context("Failed parsing & modifying icon contents")?;
 
-    // TODO: write the svg to `src/v2/icons/{category}/{kebab_case(file_name(svg))}`
-    // TODO: write an entire directory of svg files:
-    // TODO:    1. read all direct children of dir
-    // TODO:    2. category = kebab_case(dir_name)
-    // TODO:    3. run fill transform on all files
-    // TODO:    4. write all svg files to `src/v2/icons/{category}/{...}`
+    let target_dir = bookshelf_path
+        .join("src/v2/icons")
+        .join(category.to_case(Case::Kebab));
+
+    let icon_file_name = source_path
+        .file_stem()
+        .and_then(|stem| stem.to_str())
+        .map(|stem| stem.to_case(Case::Kebab))
+        .context("Icon path doesn't have a file stem")?;
+
+    let mut target_icon_path = target_dir.join(&icon_file_name);
+
+    if let Some(ext) = source_path.extension() {
+        target_icon_path.set_extension(ext);
+    }
+
+    fs::create_dir_all(&target_dir)?;
+    fs::write(&target_icon_path, &icon_content)?;
+
+    println!("✅ Written the icon to {target_icon_path:?}");
 
     Ok(())
 }
 
-fn is_bookshelf_environment(bookshelf_path: Option<Box<Path>>) -> Result<()> {
-    let path = get_bookshelf_path(bookshelf_path, "package.json");
+fn is_bookshelf_environment(bookshelf_path: &Path) -> Result<()> {
+    let path = bookshelf_path.join("package.json");
 
     let file =
         File::open(path).context("Failed to open package.json in the current working directory")?;
@@ -72,14 +86,6 @@ fn is_bookshelf_environment(bookshelf_path: Option<Box<Path>>) -> Result<()> {
 #[derive(Deserialize)]
 struct PackageJson {
     name: String,
-}
-
-fn get_bookshelf_path(bookshelf_path: Option<Box<Path>>, joinee: impl AsRef<Path>) -> PathBuf {
-    if let Some(p) = bookshelf_path {
-        p.to_path_buf().join(joinee)
-    } else {
-        PathBuf::new().join(joinee)
-    }
 }
 
 fn fix_icon_content(svg_file: File) -> Result<String> {
