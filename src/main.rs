@@ -31,7 +31,7 @@ fn main() -> Result<()> {
         bookshelf_path,
     } = Cli::parse();
 
-    let bookshelf_path = bookshelf_path.unwrap_or(PathBuf::new());
+    let bookshelf_path = bookshelf_path.unwrap_or(std::env::current_dir()?);
 
     is_bookshelf_environment(&bookshelf_path)?;
 
