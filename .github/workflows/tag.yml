@@ -2,7 +2,7 @@ name: "Tag"
 on:
   push:
     branches:
-      - "main"
+      - "master"
 jobs:
   create-tag:
     name: "Create tag"
