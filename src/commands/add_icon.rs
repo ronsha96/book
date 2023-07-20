@@ -9,7 +9,7 @@ use std::{
 use xml::{attribute::Attribute, name::Name};
 
 pub fn add_icon(bookshelf_path: &Path, source_path: &Path, category: String) -> Result<()> {
-    let icon_file = File::open(&source_path)?;
+    let icon_file = File::open(source_path)?;
 
     let icon_content =
         fix_icon_content(icon_file).context("Failed parsing & modifying icon contents")?;
@@ -24,14 +24,14 @@ pub fn add_icon(bookshelf_path: &Path, source_path: &Path, category: String) -> 
         .map(|stem| stem.to_case(Case::Kebab))
         .context("Icon path doesn't have a file stem")?;
 
-    let mut target_icon_path = target_dir.join(&icon_file_name);
+    let mut target_icon_path = target_dir.join(icon_file_name);
 
     if let Some(ext) = source_path.extension() {
         target_icon_path.set_extension(ext);
     }
 
     fs::create_dir_all(&target_dir)?;
-    fs::write(&target_icon_path, &icon_content)?;
+    fs::write(&target_icon_path, icon_content)?;
 
     println!("✅ Written the icon to {target_icon_path:?}");
 
