@@ -60,7 +60,7 @@ jobs:
       - name: "Upload Binaries"
         uses: "taiki-e/upload-rust-binary-action@v1"
         with:
-          bin: "shazam"
+          bin: "book"
           target: ${{ matrix.target }}
           archive: $bin-${{ matrix.target }}
           ref: refs/tags/v${{ needs.get-tag.outputs.pkg-version }}
@@ -87,12 +87,12 @@ jobs:
 #       id: "meta"
 #       uses: "docker/metadata-action@v4"
 #       with:
-#         images: "bwks/shazam"
+#         images: "ronsha96/book"
 #     
 #     - name: "Build and push Docker image"
 #       uses: "docker/build-push-action@v3"
 #       with:
 #         context: .
 #         push: true
-#         tags: bwks/shazam:latest,bwks/shazam:v${{ needs.get-tag.outputs.pkg-version }}
+#         tags: ronsha96/book:latest,ronsha96/book:v${{ needs.get-tag.outputs.pkg-version }}
 #         labels: ${{ steps.meta.outputs.labels }}
