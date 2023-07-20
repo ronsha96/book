@@ -33,7 +33,7 @@ pub fn add_icon(bookshelf_path: &Path, source_path: &Path, category: String) -> 
     fs::create_dir_all(&target_dir)?;
     fs::write(&target_icon_path, icon_content)?;
 
-    println!("✅ Written the icon to {target_icon_path:?}");
+    println!("Created the icon in {target_icon_path:?}");
 
     Ok(())
 }
