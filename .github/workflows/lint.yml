@@ -1,7 +1,7 @@
 on: [push, pull_request]
 jobs:
-  check:
-    name: Check
+  lints:
+    name: Lints
     runs-on: ubuntu-latest
     steps:
       - name: Checkout sources
@@ -12,7 +12,14 @@ jobs:
           profile: minimal
           toolchain: stable
           override: true
-      - name: Run cargo check
+          components: rustfmt, clippy
+      - name: Run cargo fmt
         uses: actions-rs/cargo@v1
         with:
-          command: check
+          command: fmt
+          args: --all -- --check
+      - name: Run cargo clippy
+        uses: actions-rs/cargo@v1
+        with:
+          command: clippy
+          args: -- -D warnings
