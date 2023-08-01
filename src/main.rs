@@ -29,6 +29,11 @@ enum Commands {
         path: PathBuf,
 
         /// The icon's target category
+        #[arg(
+            short,
+            long,
+            help = "The icon's category name, formatted in kebab-case. Creates a new directory if the category doesn't exist."
+        )]
         category: String,
     },
 }
